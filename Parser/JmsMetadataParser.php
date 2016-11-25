@@ -85,7 +85,7 @@ class JmsMetadataParser implements ParserInterface, PostParserInterface
     public function parse(array $input)
     {
         $className = $input['class'];
-        $groups    = $input['groups'];
+        $groups    = !empty($input['groups']) ? $input['groups'] : array("Default");
 
         return $this->doParse($className, array(), $groups);
     }
@@ -133,6 +133,7 @@ class JmsMetadataParser implements ParserInterface, PostParserInterface
                 // apply exclusion strategies
                 foreach ($exclusionStrategies as $strategy) {
                     if (true === $strategy->shouldSkipProperty($item, SerializationContext::create())) {
+                        $params[$name] = null;
                         continue 2;
                     }
                 }
@@ -273,6 +274,12 @@ class JmsMetadataParser implements ParserInterface, PostParserInterface
      */
     protected function doPostParse (array $parameters, array $visited = array(), array $groups = array())
     {
+        foreach ($parameters as $param => $data) {
+            if (!array_key_exists('description', $data)) {
+                $parameters[$param] = null;
+            }
+        }
+        
         foreach ($parameters as $param => $data) {
             if (isset($data['class']) && isset($data['children']) && !in_array($data['class'], $visited)) {
                 $visited[] = $data['class'];
